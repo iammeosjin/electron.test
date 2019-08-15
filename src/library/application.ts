@@ -34,12 +34,21 @@ export default class App {
 
   public createSession(params: { name: string; path: string }) {
     this.currentSession = new Session(params);
-    this.currentSession.savePreferences();
+    const result = this.currentSession.preSave();
+    if (result.status !== 200) {
+      delete this.currentSession;
+      return { status: result.status, message: 'Session already existed' };
+    }
+    return this.currentSession.savePreferences();
   }
 
   public loadSession(params: { name: string; path: string }) {
     this.currentSession = new Session(params);
-    this.currentSession.loadPreferences();
+    const result = this.currentSession.loadPreferences();
+    if (result.status !== 200) {
+      delete this.currentSession;
+    }
+    return result;
   }
 
 

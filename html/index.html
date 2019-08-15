@@ -5,19 +5,69 @@
         <legend>Sessions</legend>
         <input type="text" id="createFileInput"><button id="createFile">Create</button>
         <input type="text" id="readFileInput"><button id="readFile">Load</button>
-        <input type="text" id="saveFileInput"><button id="saveFile">Save</button>
+        <button id="saveFile">Save</button>
       </fieldset>
     </div>
     <br>
     <div>
         <fieldset>
           <legend>Functions</legend>
-          <input type="text" id="addFunctionInput"><button id="addFunction">Add</button>
-          <input type="text" id="openFunctionInput"><button id="openFunction">Open</button>
+          <input type="text" id="addFunctionInput"><button id="addFunction" disabled>Add</button>
+          <input type="file" id="openFunctionInput"><button id="openFunction">Add</button>
           <input type="text" id="removeFunctionInput"><button id="removeFunction">Remove</button>
         </fieldset>
       
     </div>
+    <div id="errorArea"  style="color:red"></div>
     <div id="workspace"></div>
+    <script>
+      document.body.onload = () => {
+        const { ipcRenderer } = require('electron');
+        //create session
+        document.getElementById('createFile').onclick = (event) => {
+          const fileName = document.getElementById('createFileInput').value;
+          if (fileName.trim() === '') return;
+          ipcRenderer.send('session:create', { status: 200, data: { fileName } });
+        }
+        //read sessions
+        document.getElementById('readFile').onclick = (event) => {
+          const fileName = document.getElementById('readFileInput').value;
+          if (fileName.trim() === '') return;
+          ipcRenderer.send('session:read', { status: 200, data: { fileName } });
+        }
+        //save sessions
+        document.getElementById('saveFile').onclick = (event) => {
+          ipcRenderer.send('session:save', { status: 200, data: {} });
+        }
+
+        //open function
+        document.getElementById('openFunction').onclick = (event) => {
+          const fileName = document.getElementById('openFunctionInput').files[0].path.split("\\");
+          ipcRenderer.send('function:read', { 
+            status: 200, data: {
+              name: fileName.pop(),
+              path: fileName.join('\\'),
+            } 
+          });
+        }
+
+
+
+        ipcRenderer.on('index:title:update', (event, data) => {
+          document.title = data.name;
+        });
+
+        ipcRenderer.on('index:message', (event, data) => {
+          document.getElementById('workspace').innerHTML = data.message
+        });
+
+        ipcRenderer.on('index:error', (event, data) => {
+          document.getElementById('errorArea').innerHTML = data.message
+        });
+
+
+      }
+      
+    </script>
   </body>
 </html>

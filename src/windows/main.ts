@@ -5,6 +5,7 @@ import path from 'path';
 export default class MainWindow extends BrowserWindow {
   public constructor() {
     super({
+      fullscreenWindowTitle: true,
       webPreferences: {
         nodeIntegration: true,
       },
