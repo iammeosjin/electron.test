@@ -58,11 +58,12 @@
         });
 
         ipcRenderer.on('index:message', (event, data) => {
+          document.getElementById('errorArea').innerHTML = '';
+          if (data.status !== 200){
+            document.getElementById('errorArea').innerHTML = data.message
+            return;
+          }
           document.getElementById('workspace').innerHTML = data.message
-        });
-
-        ipcRenderer.on('index:error', (event, data) => {
-          document.getElementById('errorArea').innerHTML = data.message
         });
 
 

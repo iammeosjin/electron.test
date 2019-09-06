@@ -16,11 +16,13 @@ electron.on('ready', () => {
   });
 
   ipcMain.on('session:create', (_event: any, item: any) => {
-    console.assert(item.status === 200);
-
-    const result = app.createSession({ name: item.data.fileName, path: item.data.filePath || `${process.cwd()}\\files` });
+    const result = app.createSession({
+      name: item.data.fileName,
+      path: item.data.filePath || app.preference.sessionFolder,
+    });
     if (!app.session) {
-      mainWindow.webContents.send('index:error', {
+      mainWindow.webContents.send('index:message', {
+        status: 400,
         message: `Unable to create session: ${result.message}`,
         meta: item.data,
       });
@@ -30,43 +32,58 @@ electron.on('ready', () => {
   });
 
   ipcMain.on('session:read', (_event: any, item: any) => {
-    console.assert(item.status === 200);
-    const result = app.loadSession({ name: item.data.fileName, path: item.data.filePath || `${process.cwd()}\\files` });
+    const result = app.loadSession({
+      name: item.data.fileName,
+      path: item.data.filePath || app.preference.sessionFolder,
+    });
     if (!app.session) {
-      mainWindow.webContents.send('index:error', {
+      mainWindow.webContents.send('index:message', {
+        status: 400,
         message: `Unable to load session: ${result.message}`,
         meta: item.data,
       });
       return;
     }
     mainWindow.webContents.send('index:title:update', app.session.toJSON());
+    mainWindow.webContents.send('index:message', {
+      status: 200,
+      message: JSON.stringify(
+        app.session.functionList(),
+      ),
+    });
   });
 
   ipcMain.on('session:save', (_event: any, item: any) => {
-    console.assert(item.status === 200);
     if (!app.session) {
-      mainWindow.webContents.send('index:error', {
+      mainWindow.webContents.send('index:message', {
+        status: 400,
         message: 'Invalid session',
         meta: item.data,
       });
       return;
     }
     app.session.savePreferences();
+    app.save();
     mainWindow.webContents.send('index:message', {
+      status: 200,
       message: 'Saved',
     });
   });
 
 
   ipcMain.on('function:read', (_event: any, item: any) => {
-    console.assert(item.status === 200);
     if (!app.session) {
-      mainWindow.webContents.send('index:error', { message: 'Invalid session', meta: item.data });
+      mainWindow.webContents.send('index:message', {
+        status: 400,
+        message: 'Invalid session',
+        meta: item.data,
+      });
       return;
     }
     app.session.addFunction(item.data);
     mainWindow.webContents.send('index:title:update', app.session.toJSON());
     mainWindow.webContents.send('index:message', {
+      status: 200,
       message: 'Loaded!',
     });
   });

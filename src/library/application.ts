@@ -2,6 +2,7 @@ import fs from 'fs';
 import { appPath } from './env';
 import Session from './session';
 
+const secondaryRootFolder = `${process.cwd()}/appdata`;
 
 export default class App {
   private currentSession: Session | null;
@@ -10,13 +11,17 @@ export default class App {
 
   public constructor() {
     this.appPreference = {
-      path: appPath || process.cwd(),
+      path: appPath || secondaryRootFolder,
       fileName: 'app.settings',
     };
     this.currentSession = null;
+    try {
+      fs.mkdirSync(this.appPreference.path);
+    // eslint-disable-next-line no-empty
+    } catch {}
   }
 
-  public start() {
+  public start() { // where appPreference is load or initialize
     try {
       this.appPreference = JSON.parse(
         fs.readFileSync(`${this.appPreference.path}\\${this.appPreference.fileName}`, {
@@ -26,7 +31,8 @@ export default class App {
     } catch {
       this.appPreference = {
         name: 'Application Title',
-        functionsPath: `${process.cwd()}\\functions`,
+        sessionsPath: `${this.appPreference.path}/sessions`,
+        functionsPath: `${this.appPreference.path}/functions`,
         ...this.appPreference,
       };
     }
@@ -56,7 +62,16 @@ export default class App {
     return this.currentSession;
   }
 
-  public save() {
+  public get preference() {
+    return {
+      rootFolder: this.appPreference.path,
+      title: this.appPreference.name,
+      functionFolder: this.appPreference.functionsPath,
+      sessionFolder: this.appPreference.sessionsPath,
+    };
+  }
+
+  public save() { // save the app-settings
     try {
       fs.writeFileSync(
         `${this.appPreference.path}\\${this.appPreference.fileName}`,
@@ -65,13 +80,9 @@ export default class App {
       );
       if (this.currentSession) this.currentSession.savePreferences();
     } catch (error) {
-      console.log(error);
+      console.log('saving error', error);
       return false;
     }
     return true;
-  }
-
-  public get title() {
-    return this.appPreference.name;
   }
 }

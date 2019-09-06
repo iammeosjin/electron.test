@@ -52,7 +52,6 @@ export default class Session {
 
   public savePreferences(directory?: string) {
     const path = directory || this.preferences.workspace;
-    console.log('Saving', this.preferences, path);
     fs.writeFileSync(
       `${path}\\${this.preferences.name}.session`,
       JSON.stringify(this.preferences),
@@ -85,9 +84,6 @@ export default class Session {
       id,
       ...params,
     });
-    console.log(`${params.path}\\${
-      name
-    }`, this.preferences);
     this.functions.push({
       id,
       content: require(`${params.path}\\${
@@ -109,6 +105,10 @@ export default class Session {
     );
     this.savePreferences(this.preferences.workspace);
     this.loadFunctions();
+  }
+
+  public functionList() {
+    return this.preferences.functions;
   }
 
   public toString() {
